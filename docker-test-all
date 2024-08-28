@@ -1,0 +1,59 @@
+#!/bin/sh -ef
+
+# Test 1: create new repo from scratch and test installing packages
+test_new_repo()
+{
+	echo '# Test 1'
+
+	rm -rf test/repo1
+
+	# Create repo1 with 2 packages
+	echo '## Create repo1'
+	REPO_DIR=test/repo1 \
+		PKGS_SRC="all_pkgs/kaitai-struct-compiler_0.7_all.deb all_pkgs/kaitai-struct-compiler_0.8_all.deb" \
+		./docker-repo-apt-handle
+
+	# Try installing a package
+	echo '## Test package install from repo1'
+	REPO_DIR=test/repo1 ./docker-test-pkg-install >test/repo1-install.out
+
+	if grep -q 'kaitai-struct-compiler 0.8' test/repo1-install.out; then
+		echo "## Test 1: OK"
+	else
+		echo "## Test 1: FAILED"
+		echo 'Failed to install kaitai-struct-compiler 0.8, see `test/repo1-install.out`'
+		exit 1
+	fi
+}
+
+# Test 2: take existing repo and add a new package
+test_update_repo()
+{
+	echo '# Test 2'
+
+	rm -rf test/repo2
+
+	# Simulate repo2 by copying parts of repo1 that we will download from storage account
+	mkdir -p test/repo2/dists/stable/main/binary-all
+	cp test/repo1/dists/stable/main/binary-all/Packages.gz test/repo2/dists/stable/main/binary-all
+
+	# Fill in the rest of the repo2
+	REPO_DIR=test/repo2 \
+		PKGS_SRC="all_pkgs/kaitai-struct-compiler_0.9_all.deb" \
+		./docker-repo-apt-handle
+
+	# Try installing a package
+	echo '## Test package install from repo2'
+	REPO_DIR=test/repo2 ./docker-test-pkg-install >test/repo2-install.out
+
+	if grep -q 'kaitai-struct-compiler 0.9' test/repo2-install.out; then
+		echo "## Test 2: OK"
+	else
+		echo "## Test 2: FAILED"
+		echo 'Failed to install kaitai-struct-compiler 0.9, see `test/repo2-install.out`'
+		exit 1
+	fi
+}
+
+test_new_repo
+test_update_repo

@@ -1,0 +1,8 @@
+#!/bin/sh -ef
+
+SCRIPT_DIR=$(dirname $0)
+. "$SCRIPT_DIR/common.sh"
+
+DOCKER_EXTRA_OPTS="$DOCKER_EXTRA_OPTS -it"
+
+docker_run bash
