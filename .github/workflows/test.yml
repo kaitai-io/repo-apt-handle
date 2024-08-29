@@ -8,7 +8,7 @@ on:
     branches:
       - master
 jobs:
-  test:
+  test_local:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,3 +21,20 @@ jobs:
         run: ./test-generate-gpg
       - name: Run tests
         run: ./docker-test-all
+  test_as_action:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download test packages
+        run: ./test-download-debs
+      - name: Generate test GPG keys
+        run: ./test-generate-gpg
+      - name: Run action - create repo from scratch
+        uses: ./ # Uses an action in the root directory
+        id: az_repo_apt_add
+        with:
+          az_storage_sas_token: ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }}
+          az_storage_account: packageskaitai
+          az_storage_container: test3
+          packages: all_pkgs/kaitai-struct-compiler_0.7_all.deb

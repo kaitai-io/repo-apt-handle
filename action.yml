@@ -1,0 +1,23 @@
+name: Publish .deb package
+description: Add .deb package to apt repository hosted on Azure Blob Storage
+inputs:
+  az_storage_sas_token:
+    description: Azure Storage SAS token
+    required: true
+  az_storage_account:
+    description: Azure Storage account name
+    required: true
+  az_storage_container:
+    description: Azure Storage container name
+    required: true
+  packages:
+    description: List of paths to .deb packages to publish
+    required: true
+runs:
+  using: docker
+  image: Dockerfile
+  env:
+    AZURE_STORAGE_SAS_TOKEN: ${{ inputs.az_storage_sas_token }}
+    AZ_STORAGE_ACCOUNT: ${{ inputs.az_storage_account }}
+    AZ_STORAGE_CONTAINER: ${{ inputs.az_storage_container }}
+    PKGS_SRC: ${{ inputs.packages }}
