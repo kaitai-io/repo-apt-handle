@@ -32,4 +32,7 @@ COPY \
 # paths to .deb files to publish
 WORKDIR /github/workspace
 
+# Point to space inside this container, so constructed repo won't spill over
+ENV REPO_DIR=/workrepo
+
 ENTRYPOINT ["/az-repo-apt-add"]
