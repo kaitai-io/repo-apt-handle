@@ -28,7 +28,7 @@ GPG_KEY_PASSPHRASE_FILE=gpg/key-password
 GPG_KEY_ID=kaitai-bot@kaitai.io
 
 if [ -z "$PKGS_SRC" ]; then
-    PKGS_SRC=all_pkgs/*.deb
+	PKGS_SRC=all_pkgs/*.deb
 fi
 
 echo "REPO_DIR: $REPO_DIR"
@@ -36,51 +36,51 @@ echo "PKGS_SRC: [$PKGS_SRC]"
 
 install_dependencies()
 {
-    apt-get update
-    apt-get install -y dpkg-dev
+	apt-get update
+	apt-get install -y dpkg-dev
 }
 
 repo_cleanup()
 {
-    rm -rf "$REPO_DIR"
+	rm -rf "$REPO_DIR"
 }
 
 repo_hash()
 {
-    local hash_name="$1"
-    local hash_cmd="$2"
-    echo "$hash_name:"
-    for f in $(find -type f); do
-        f=$(echo "$f" | cut -c3-) # remove ./ prefix
-        if [ "$(basename "$f")" = Release ]; then
-            continue
-        fi
-        hash_hex=$("$hash_cmd" "$f" | cut -d' ' -f1)
-        echo " $hash_hex $(wc -c $f)"
-    done
+	local hash_name="$1"
+	local hash_cmd="$2"
+	echo "$hash_name:"
+	for f in $(find -type f); do
+		f=$(echo "$f" | cut -c3-) # remove ./ prefix
+		if [ "$(basename "$f")" = Release ]; then
+			continue
+		fi
+		hash_hex=$("$hash_cmd" "$f" | cut -d' ' -f1)
+		echo " $hash_hex $(wc -c $f)"
+	done
 }
 
 repo_create_packages()
 {
-    cd "$REPO_DIR"
-    dpkg-scanpackages --multiversion pool >"dists/stable/main/binary-$REPO_ARCH/Packages"
-    cat "dists/stable/main/binary-$REPO_ARCH/Packages" |
-        gzip -9 >"dists/stable/main/binary-$REPO_ARCH/Packages.gz"
+	cd "$REPO_DIR"
+	dpkg-scanpackages --multiversion pool >"dists/stable/main/binary-$REPO_ARCH/Packages"
+	cat "dists/stable/main/binary-$REPO_ARCH/Packages" |
+		gzip -9 >"dists/stable/main/binary-$REPO_ARCH/Packages.gz"
 }
 
 repo_append_packages()
 {
-    cd "$REPO_DIR"
-    gunzip "dists/stable/main/binary-$REPO_ARCH/Packages.gz"
-    dpkg-scanpackages --multiversion pool >>"dists/stable/main/binary-$REPO_ARCH/Packages"
-    cat "dists/stable/main/binary-$REPO_ARCH/Packages" |
-        gzip -9 >"dists/stable/main/binary-$REPO_ARCH/Packages.gz"
+	cd "$REPO_DIR"
+	gunzip "dists/stable/main/binary-$REPO_ARCH/Packages.gz"
+	dpkg-scanpackages --multiversion pool >>"dists/stable/main/binary-$REPO_ARCH/Packages"
+	cat "dists/stable/main/binary-$REPO_ARCH/Packages" |
+		gzip -9 >"dists/stable/main/binary-$REPO_ARCH/Packages.gz"
 }
 
 repo_create_release()
 {
-    cd "$REPO_DIR/dists/stable"
-    cat >Release <<EOF
+	cd "$REPO_DIR/dists/stable"
+	cat >Release <<EOF
 Origin: Kaitai project
 Label: stable
 Suite: stable
@@ -92,48 +92,48 @@ Description: Kaitai Debian software repository
 Date: $(date -Ru)
 EOF
 
-    repo_hash MD5Sum md5sum >>Release
-    repo_hash SHA1 sha1sum >>Release
-    repo_hash SHA256 sha256sum >>Release
+	repo_hash MD5Sum md5sum >>Release
+	repo_hash SHA1 sha1sum >>Release
+	repo_hash SHA256 sha256sum >>Release
 }
 
 repo_create_release_pgp()
 {
-    gpg --batch --yes --passphrase-file "$GPG_KEY_PASSPHRASE_FILE" --import <"$GPG_KEY_FILE"
-    gpg --list-keys
+	gpg --batch --yes --passphrase-file "$GPG_KEY_PASSPHRASE_FILE" --import <"$GPG_KEY_FILE"
+	gpg --list-keys
 
-    # Rather complicated way to persuade gpg to work in batch mode.
-    # This specific way seems to work on Ubuntu 24.04
-    # See https://unix.stackexchange.com/questions/60213/gpg-asks-for-password-even-with-passphrase
-    cat "$GPG_KEY_PASSPHRASE_FILE" |
-        gpg \
-            --batch --yes --default-key "$GPG_KEY_ID" \
-            --sign \
-            --detach-sign \
-            --armor \
-            --pinentry-mode loopback \
-            --passphrase-fd 0 \
-            --output "$REPO_DIR/dists/stable/Release.gpg" \
-            "$REPO_DIR/dists/stable/Release"
+	# Rather complicated way to persuade gpg to work in batch mode.
+	# This specific way seems to work on Ubuntu 24.04
+	# See https://unix.stackexchange.com/questions/60213/gpg-asks-for-password-even-with-passphrase
+	cat "$GPG_KEY_PASSPHRASE_FILE" |
+		gpg \
+			--batch --yes --default-key "$GPG_KEY_ID" \
+			--sign \
+			--detach-sign \
+			--armor \
+			--pinentry-mode loopback \
+			--passphrase-fd 0 \
+			--output "$REPO_DIR/dists/stable/Release.gpg" \
+			"$REPO_DIR/dists/stable/Release"
 }
 
 repo_create()
 {
-    # Create the repo directory structure
-    mkdir -p \
-        "$REPO_DIR/pool/main" \
-        "$REPO_DIR/dists/stable/main/binary-$REPO_ARCH"
-    cp $PKGS_SRC "$REPO_DIR/pool/main"
+	# Create the repo directory structure
+	mkdir -p \
+		"$REPO_DIR/pool/main" \
+		"$REPO_DIR/dists/stable/main/binary-$REPO_ARCH"
+	cp $PKGS_SRC "$REPO_DIR/pool/main"
 
-    if [ -r "$REPO_DIR/dists/stable/main/binary-$REPO_ARCH/Packages.gz" ]; then
-        echo "### repo_append_packages"
-        repo_append_packages
-    else
-        echo "### repo_create_packages"
-        repo_create_packages
-    fi
-    repo_create_release
-    repo_create_release_pgp
+	if [ -r "$REPO_DIR/dists/stable/main/binary-$REPO_ARCH/Packages.gz" ]; then
+		echo "### repo_append_packages"
+		repo_append_packages
+	else
+		echo "### repo_create_packages"
+		repo_create_packages
+	fi
+	repo_create_release
+	repo_create_release_pgp
 }
 
 GPG_KEY_FILE=$(pwd)/"$GPG_KEY_FILE"
