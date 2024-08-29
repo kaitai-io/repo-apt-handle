@@ -30,6 +30,15 @@ jobs:
         run: ./test-download-debs
       - name: Generate test GPG keys
         run: ./test-generate-gpg
+      - name: Clean Az Storage container
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az storage blob delete-batch \
+              --account-name packageskaitai \
+              --source test3 \
+              --sas-token ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }} \
+              --pattern "*"
       - name: Run action - create repo from scratch
         uses: ./ # Uses an action in the root directory
         id: az_repo_apt_add
@@ -38,3 +47,13 @@ jobs:
           az_storage_account: packageskaitai
           az_storage_container: test3
           packages: all_pkgs/kaitai-struct-compiler_0.7_all.deb
+      - name: Test install 0.7
+        run: |
+          mkdir -p test
+          ./test-pkg-install-az | tee test/test-0.7.log
+          if grep -q 'kaitai-struct-compiler 0.7' test/test-0.7.log; then
+            echo OK
+          else
+            echo FAIL
+            exit 1
+          fi
