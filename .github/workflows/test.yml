@@ -50,7 +50,7 @@ jobs:
       - name: Test install 0.7
         run: |
           mkdir -p test
-          ./test-pkg-install-az | tee test/test-0.7.log
+          sudo ./test-pkg-install-az | tee test/test-0.7.log
           if grep -q 'kaitai-struct-compiler 0.7' test/test-0.7.log; then
             echo OK
           else
