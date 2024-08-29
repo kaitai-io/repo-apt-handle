@@ -1,0 +1,8 @@
+#!/bin/sh -ef
+
+mkdir -p all_pkgs
+cd all_pkgs
+wget \
+	https://github.com/kaitai-io/kaitai_struct_compiler/releases/download/0.7/kaitai-struct-compiler_0.7_all.deb \
+	https://github.com/kaitai-io/kaitai_struct_compiler/releases/download/0.8/kaitai-struct-compiler_0.8_all.deb \
+	https://github.com/kaitai-io/kaitai_struct_compiler/releases/download/0.9/kaitai-struct-compiler_0.9_all.deb

@@ -6,11 +6,11 @@
 # of files and directories in the repo, as well as signing with GPG key.
 #
 # Input:
-# - REPO_DIR: local directory where the repo will be created or updated (default: `repo0``)
+# - REPO_DIR: local directory where the repo will be created or updated (default: `repo0`)
 # - PKGS_SRC: list of .deb files to add to the repo (default: `all_pkgs/*.deb`)
 # - GPG_KEY_FILE: path to GPG private key file
 # - GPG_KEY_PASSPHRASE_FILE: path to file with GPG key passphrase
-# - GPG_KEY_ID: GPG key ID to use for signing
+# - GPG_KEY_ID: GPG key ID to use for signing (default: `test-key@kaitai.io`)
 #
 # Usage:
 # - For creating a new repo: just provide the input variables and run the script
@@ -25,7 +25,7 @@
 REPO_ARCH=all
 GPG_KEY_FILE=gpg/repo-privkey.asc
 GPG_KEY_PASSPHRASE_FILE=gpg/key-password
-GPG_KEY_ID=kaitai-bot@kaitai.io
+: "#{GPG_KEY_ID:=test-key@kaitai.io}"
 
 if [ -z "$PKGS_SRC" ]; then
 	PKGS_SRC=all_pkgs/*.deb

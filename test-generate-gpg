@@ -1,0 +1,35 @@
+#!/bin/sh -ef
+
+# Generate GPG key for signing Debian packages
+
+GPG_PRIV_KEY_FILE=gpg/repo-privkey.asc
+GPG_PUB_KEY_FILE=gpg/repo-pubkey.asc
+GPG_KEY_PASSPHRASE_FILE=gpg/key-password
+GPG_KEY_ID=test-key@kaitai.io
+
+mkdir -p gpg
+
+# Generate passphrase file
+echo test >"$GPG_KEY_PASSPHRASE_FILE"
+
+# Generate GPG key
+gpg \
+	--batch \
+	--passphrase-file "$GPG_KEY_PASSPHRASE_FILE" \
+	--quick-generate-key "$GPG_KEY_ID" rsa4096 sign 1y
+
+# Export public key
+gpg \
+	--export \
+	--armor \
+	"$GPG_KEY_ID" >"$GPG_PUB_KEY_FILE"
+
+# Export private key
+cat "$GPG_KEY_PASSPHRASE_FILE" |
+	gpg \
+		--batch --yes \
+		--armor \
+		--pinentry-mode loopback \
+		--passphrase-fd 0 \
+		--export-secret-keys \
+		--armor "$GPG_KEY_ID" >"$GPG_PRIV_KEY_FILE"

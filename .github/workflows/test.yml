@@ -1,0 +1,26 @@
+name: test
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: compiler
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Prebuild Docker dpkg container
+        run: ./docker-build-dpkg-container
+      - name: Download test packages
+        run: ./test-download-debs
+      - name: Generate test GPG keys
+        run: ./test-generate-gpg
+      - name: Run tests
+        run: ./docker-test-all

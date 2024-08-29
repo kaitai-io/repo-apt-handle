@@ -1,0 +1,6 @@
+#!/bin/sh -ef
+
+SCRIPT_DIR=$(dirname $0)
+. "$SCRIPT_DIR/common.sh"
+
+docker_run ./test-generate-gpg
