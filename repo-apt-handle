@@ -22,17 +22,23 @@
 #     overwriting existing files
 
 : "${REPO_DIR:=repo0}"
-REPO_ARCH=all
-GPG_KEY_FILE=gpg/repo-privkey.asc
-GPG_KEY_PASSPHRASE_FILE=gpg/key-password
-: "#{GPG_KEY_ID:=test-key@kaitai.io}"
+: "${REPO_ARCH:=all}"
+: "${GPG_KEY_FILE:=gpg/repo-privkey.asc}"
+: "${GPG_KEY_PASSPHRASE_FILE:=gpg/key-password}"
+: "${GPG_KEY_ID:=test-key@kaitai.io}"
 
 if [ -z "$PKGS_SRC" ]; then
 	PKGS_SRC=all_pkgs/*.deb
 fi
 
-echo "REPO_DIR: $REPO_DIR"
-echo "PKGS_SRC: [$PKGS_SRC]"
+cat <<EOF
+REPO_DIR: $REPO_DIR
+REPO_ARCH: $REPO_ARCH
+GPG_KEY_FILE: $GPG_KEY_FILE
+GPG_KEY_PASSPHRASE_FILE: $GPG_KEY_PASSPHRASE_FILE
+GPG_KEY_ID: $GPG_KEY_ID
+PKGS_SRC: [$PKGS_SRC]
+EOF
 
 install_dependencies()
 {
