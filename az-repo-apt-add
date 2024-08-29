@@ -2,12 +2,28 @@
 
 # Needs AZURE_STORAGE_SAS_TOKEN to be set
 
-AZ_STORAGE_ACCOUNT=packageskaitai
-AZ_STORAGE_CONTAINER=test3
-REPO_DIR=repo0
-PKGS_SRC=all_pkgs/*.deb
+: "${AZ_STORAGE_ACCOUNT:=packageskaitai}"
+: "${AZ_STORAGE_CONTAINER=test3}"
+: "${REPO_DIR=repo0}"
+: "${PKGS_SRC:=all_pkgs/*.deb}"
 
-#az storage blob list --account-name "$AZ_STORAGE_ACCOUNT" --container-name "$AZ_STORAGE_CONTAINER"
+SCRIPT_DIR=$(dirname $0)
+
+show_summary_info()
+{
+	cat <<EOF
+"# az-repo-apt-add
+
+- AZ_STORAGE_ACCOUNT: $AZ_STORAGE_ACCOUNT
+- AZ_STORAGE_CONTAINER: $AZ_STORAGE_CONTAINER
+- REPO_DIR: $REPO_DIR
+- PKGS_SRC: $PKGS_SRC
+EOF
+
+	for I in $PKGS_SRC; do
+		ls -al "$I"
+	done
+}
 
 download_existing_repo()
 {
@@ -30,10 +46,11 @@ upload_repo()
 		--source "$REPO_DIR"
 }
 
+show_summary_info
 download_existing_repo || :
 
 export REPO_DIR
 export PKGS_SRC
-./docker-repo-apt-handle
+"$SCRIPT_DIR/repo-apt-handle"
 
 upload_repo
