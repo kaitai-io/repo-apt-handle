@@ -6,6 +6,7 @@ test_new_repo()
 	echo '# Test 1'
 
 	rm -rf test/repo1
+	mkdir -p test/repo1
 
 	# Create repo1 with 2 packages
 	echo '## Create repo1'
@@ -32,6 +33,7 @@ test_update_repo()
 	echo '# Test 2'
 
 	rm -rf test/repo2
+	mkdir -p test/repo2
 
 	# Simulate repo2 by copying parts of repo1 that we will download from storage account
 	mkdir -p test/repo2/dists/stable/main/binary-all
