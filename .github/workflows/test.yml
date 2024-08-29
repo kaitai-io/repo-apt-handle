@@ -37,7 +37,16 @@ jobs:
             az storage blob delete-batch \
               --account-name packageskaitai \
               --source test3 \
-              --pattern "*" \
+              --pattern '*' \
+              --sas-token ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }}
+      - name: List Az Storage container
+        uses: azure/CLI@v1
+        with:
+          inlineScript: |
+            az storage blob list \
+              --account-name packageskaitai \
+              -c test3 \
+              --output table \
               --sas-token ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }}
       - name: Run action - create repo from scratch
         uses: ./ # Uses an action in the root directory
