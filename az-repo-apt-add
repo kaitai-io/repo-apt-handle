@@ -1,0 +1,39 @@
+#!/bin/sh -e
+
+# Needs AZURE_STORAGE_SAS_TOKEN to be set
+
+AZ_STORAGE_ACCOUNT=packageskaitai
+AZ_STORAGE_CONTAINER=test3
+REPO_DIR=repo0
+PKGS_SRC=all_pkgs/*.deb
+
+#az storage blob list --account-name "$AZ_STORAGE_ACCOUNT" --container-name "$AZ_STORAGE_CONTAINER"
+
+download_existing_repo()
+{
+	echo "## Downloading existing repo"
+	mkdir -p "$REPO_DIR/dists/stable/main/binary-all"
+	az storage blob download \
+		--account-name "$AZ_STORAGE_ACCOUNT" \
+		--container-name "$AZ_STORAGE_CONTAINER" \
+		--name "dists/stable/main/binary-all/Packages.gz" \
+		--file "$REPO_DIR/dists/stable/main/binary-all/Packages.gz"
+}
+
+upload_repo()
+{
+	echo "## Uploading repo"
+	az storage blob upload-batch \
+		--account-name "$AZ_STORAGE_ACCOUNT" \
+		--destination "$AZ_STORAGE_CONTAINER" \
+		--overwrite \
+		--source "$REPO_DIR"
+}
+
+download_existing_repo || :
+
+export REPO_DIR
+export PKGS_SRC
+./docker-repo-apt-handle
+
+upload_repo

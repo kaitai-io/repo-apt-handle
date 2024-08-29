@@ -1,0 +1,20 @@
+#!/bin/sh -e
+# Tests installation and runnability of a `kaitai-struct-compiler` package from a local repository
+
+apt-get update
+apt-get install -y ca-certificates
+
+: "${REPO_DIR:=repo0}"
+GPG_PUB_KEY_FILE=gpg/repo-pubkey.asc
+
+cat "$GPG_PUB_KEY_FILE" | apt-key add -
+
+echo "deb [arch=all] https://packages.kaitai.io/test3 stable main" | tee /etc/apt/sources.list.d/kaitai-test-az.list
+
+#apt-get update --allow-insecure-repositories
+#apt-get install -y --allow-unauthenticated kaitai-struct-compiler
+
+apt-get update
+apt-get install -y kaitai-struct-compiler default-jre-headless
+
+kaitai-struct-compiler --version
