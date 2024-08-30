@@ -39,6 +39,7 @@ download_existing_repo()
 upload_repo()
 {
 	echo "## Uploading repo"
+	ls -alR "$REPO_DIR"
 	az storage blob upload-batch \
 		--account-name "$AZ_STORAGE_ACCOUNT" \
 		--destination "$AZ_STORAGE_CONTAINER" \
