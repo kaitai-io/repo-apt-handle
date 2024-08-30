@@ -158,9 +158,9 @@ repo_create()
 }
 
 # Make paths absolute
-GPG_KEY_FILE=$(cd "$GPG_KEY_FILE" && pwd)
-GPG_KEY_PASSPHRASE_FILE=$(cd "$GPG_KEY_PASSPHRASE_FILE" && pwd)
-REPO_DIR=$(cd "$REPO_DIR" && pwd)
+GPG_KEY_FILE=$(realpath "$GPG_KEY_FILE")
+GPG_KEY_PASSPHRASE_FILE=$(realpath "$GPG_KEY_PASSPHRASE_FILE")
+REPO_DIR=$(realpath "$REPO_DIR")
 
 #install_dependencies
 #repo_cleanup
