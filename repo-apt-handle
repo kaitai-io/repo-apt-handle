@@ -66,8 +66,21 @@ repo_hash()
 	done
 }
 
+# Create basic repo directory structure and copy packages into pool dir
+repo_copy_pool_files()
+{
+	echo "### copy_pool_files"
+
+	mkdir -p \
+		"$REPO_DIR/pool/main" \
+		"$REPO_DIR/dists/stable/main/binary-$REPO_ARCH"
+	cp --verbose $PKGS_SRC "$REPO_DIR/pool/main"
+}
+
 repo_create_packages()
 {
+	echo "### repo_create_packages"
+
 	cd "$REPO_DIR"
 	dpkg-scanpackages --multiversion pool >"dists/stable/main/binary-$REPO_ARCH/Packages"
 	cat "dists/stable/main/binary-$REPO_ARCH/Packages" |
@@ -76,6 +89,8 @@ repo_create_packages()
 
 repo_append_packages()
 {
+	echo "### repo_append_packages"
+
 	cd "$REPO_DIR"
 	gunzip "dists/stable/main/binary-$REPO_ARCH/Packages.gz"
 	dpkg-scanpackages --multiversion pool >>"dists/stable/main/binary-$REPO_ARCH/Packages"
@@ -85,6 +100,8 @@ repo_append_packages()
 
 repo_create_release()
 {
+	echo "### repo_create_release"
+
 	cd "$REPO_DIR/dists/stable"
 	cat >Release <<EOF
 Origin: Kaitai project
@@ -101,10 +118,14 @@ EOF
 	repo_hash MD5Sum md5sum >>Release
 	repo_hash SHA1 sha1sum >>Release
 	repo_hash SHA256 sha256sum >>Release
+
+	ls -al "$REPO_DIR/dists/stable"
 }
 
 repo_create_release_pgp()
 {
+	echo "### repo_create_release_pgp"
+
 	gpg --batch --yes --passphrase-file "$GPG_KEY_PASSPHRASE_FILE" --import <"$GPG_KEY_FILE"
 	gpg --list-keys
 
@@ -125,26 +146,21 @@ repo_create_release_pgp()
 
 repo_create()
 {
-	# Create the repo directory structure
-	mkdir -p \
-		"$REPO_DIR/pool/main" \
-		"$REPO_DIR/dists/stable/main/binary-$REPO_ARCH"
-	cp $PKGS_SRC "$REPO_DIR/pool/main"
+	repo_copy_pool_files
 
 	if [ -r "$REPO_DIR/dists/stable/main/binary-$REPO_ARCH/Packages.gz" ]; then
-		echo "### repo_append_packages"
 		repo_append_packages
 	else
-		echo "### repo_create_packages"
 		repo_create_packages
 	fi
 	repo_create_release
 	repo_create_release_pgp
 }
 
-GPG_KEY_FILE=$(pwd)/"$GPG_KEY_FILE"
-GPG_KEY_PASSPHRASE_FILE=$(pwd)/"$GPG_KEY_PASSPHRASE_FILE"
-REPO_DIR=$(pwd)/"$REPO_DIR"
+# Make paths absolute
+GPG_KEY_FILE=$(cd "$GPG_KEY_FILE" && pwd)
+GPG_KEY_PASSPHRASE_FILE=$(cd "$GPG_KEY_PASSPHRASE_FILE" && pwd)
+REPO_DIR=$(cd "$REPO_DIR" && pwd)
 
 #install_dependencies
 #repo_cleanup
