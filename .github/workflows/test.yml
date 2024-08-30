@@ -31,26 +31,23 @@ jobs:
       - name: Generate test GPG keys
         run: ./test-generate-gpg
       - name: Clean Az Storage container
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            az storage blob delete-batch \
-              --account-name packageskaitai \
-              --source test3 \
-              --pattern '*' \
-              --sas-token ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }}
+        env:
+          AZURE_STORAGE_SAS_TOKEN: ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }}
+        run: |
+          az storage blob delete-batch \
+            --account-name packageskaitai \
+            --source test3 \
+            --pattern '*'
       - name: List Az Storage container
-        uses: azure/CLI@v1
-        with:
-          inlineScript: |
-            az storage blob list \
-              --account-name packageskaitai \
-              -c test3 \
-              --output table \
-              --sas-token ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }}
+        env:
+          AZURE_STORAGE_SAS_TOKEN: ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }}
+        run:
+          az storage blob list \
+            --account-name packageskaitai \
+            -c test3 \
+            --output table
       - name: Run action - create repo from scratch
         uses: ./ # Uses an action in the root directory
-        id: az_repo_apt_add
         with:
           az_storage_sas_token: ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }}
           az_storage_account: packageskaitai
