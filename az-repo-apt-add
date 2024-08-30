@@ -36,6 +36,15 @@ download_existing_repo()
 		--file "$REPO_DIR/dists/stable/main/binary-all/Packages.gz"
 }
 
+build_local_repo()
+{
+	echo "## Building local repo"
+
+	export REPO_DIR
+	export PKGS_SRC
+	"$SCRIPT_DIR/repo-apt-handle"
+}
+
 upload_repo()
 {
 	echo "## Uploading repo"
@@ -49,9 +58,5 @@ upload_repo()
 
 show_summary_info
 download_existing_repo || :
-
-export REPO_DIR
-export PKGS_SRC
-"$SCRIPT_DIR/repo-apt-handle"
-
+build_local_repo
 upload_repo
