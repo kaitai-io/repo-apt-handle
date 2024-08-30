@@ -41,11 +41,12 @@ jobs:
       - name: List Az Storage container
         env:
           AZURE_STORAGE_SAS_TOKEN: ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }}
-        run:
+        run: |
           az storage blob list \
             --account-name packageskaitai \
             -c test3 \
-            --output table
+            --output table \
+            --verbose
       - name: Run action - create repo from scratch
         uses: ./ # Uses an action in the root directory
         with:
@@ -58,6 +59,23 @@ jobs:
           mkdir -p test
           sudo ./test-pkg-install-az | tee test/test-0.7.log
           if grep -q 'kaitai-struct-compiler 0.7' test/test-0.7.log; then
+            echo OK
+          else
+            echo FAIL
+            exit 1
+          fi
+      - name: Run action - add to repo
+        uses: ./ # Uses an action in the root directory
+        with:
+          az_storage_sas_token: ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }}
+          az_storage_account: packageskaitai
+          az_storage_container: test3
+          packages: all_pkgs/kaitai-struct-compiler_0.9_all.deb
+      - name: Test install 0.9
+        run: |
+          mkdir -p test
+          sudo ./test-pkg-install-az | tee test/test-0.9.log
+          if grep -q 'kaitai-struct-compiler 0.9' test/test-0.9.log; then
             echo OK
           else
             echo FAIL
