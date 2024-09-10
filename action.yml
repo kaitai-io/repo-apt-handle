@@ -26,4 +26,6 @@ runs:
     AZURE_STORAGE_SAS_TOKEN: ${{ inputs.az_storage_sas_token }}
     AZ_STORAGE_ACCOUNT: ${{ inputs.az_storage_account }}
     AZ_STORAGE_CONTAINER: ${{ inputs.az_storage_container }}
+    GPG_PRIV_KEY: ${{ inputs.gpg_priv_key }}
+    GPG_PASSPHRASE: ${{ inputs.gpg_passphrase }}
     PKGS_SRC: ${{ inputs.packages }}

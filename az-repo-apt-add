@@ -23,6 +23,12 @@ EOF
 	for I in $PKGS_SRC; do
 		ls -al "$I"
 	done
+
+	echo -n '- GPG_PRIV_KEY: '
+	[ -n "$GPG_PRIV_KEY" ] && echo '(set)' || echo '(not set)'
+
+	echo -n '- GPG_PASSPHRASE: '
+	[ -n "$GPG_PASSPHRASE" ] && echo '(set)' || echo '(not set)'
 }
 
 download_existing_repo()
@@ -39,6 +45,20 @@ download_existing_repo()
 build_local_repo()
 {
 	echo "## Building local repo"
+
+	if [ -n "$GPG_PRIV_KEY" ]; then
+		mkdir -p /gpg
+
+		export GPG_KEY_FILE=/gpg/privkey.asc
+		echo "* Saving GPG key as $GPG_KEY_FILE"
+		echo -n "$GPG_PRIV_KEY" >"$GPG_KEY_FILE"
+	fi
+
+	if [ -n "$GPG_PASSPHRASE" ]; then
+		export GPG_KEY_PASSPHRASE_FILE=/gpg/key-password
+		echo "* Saving GPG passphrase as $GPG_KEY_PASSPHRASE_FILE"
+		echo -n "$GPG_PASSPHRASE" >"$GPG_KEY_PASSPHRASE_FILE"
+	fi
 
 	export REPO_DIR
 	export PKGS_SRC
