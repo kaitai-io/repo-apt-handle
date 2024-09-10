@@ -13,6 +13,12 @@ inputs:
   packages:
     description: List of paths to .deb packages to publish
     required: true
+  gpg_priv_key:
+    description: GPG private key as ASCII-armored string.
+    required: true
+  gpg_passphrase:
+    description: GPG passphrase for private key.
+    required: true
 runs:
   using: docker
   image: Dockerfile

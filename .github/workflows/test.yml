@@ -21,7 +21,7 @@ jobs:
         run: ./test-generate-gpg
       - name: Run tests
         run: ./docker-test-all
-  test_as_action:
+  test_as_action_keys_in_fs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -70,6 +70,73 @@ jobs:
           az_storage_sas_token: ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }}
           az_storage_account: packageskaitai
           az_storage_container: test3
+          packages: all_pkgs/kaitai-struct-compiler_0.9_all.deb
+      - name: Test install 0.9
+        run: |
+          mkdir -p test
+          sudo ./test-pkg-install-az | tee test/test-0.9.log
+          if grep -q 'kaitai-struct-compiler 0.9' test/test-0.9.log; then
+            echo OK
+          else
+            echo FAIL
+            exit 1
+          fi
+  test_as_action_keys_in_inputs:
+    runs-on: ubuntu-latest
+    # In theory, they could run in parallel, but we have one test Az storage container, so forcing sequential execution
+    needs: test_as_action_keys_in_fs
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Download test packages
+        run: ./test-download-debs
+      - name: Clean Az Storage container
+        env:
+          AZURE_STORAGE_SAS_TOKEN: ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }}
+        run: |
+          az storage blob delete-batch \
+            --account-name packageskaitai \
+            --source test3 \
+            --pattern '*'
+      - name: List Az Storage container
+        env:
+          AZURE_STORAGE_SAS_TOKEN: ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }}
+        run: |
+          az storage blob list \
+            --account-name packageskaitai \
+            -c test3 \
+            --output table \
+            --verbose
+      - name: Run action - create repo from scratch
+        uses: ./ # Uses an action in the root directory
+        with:
+          az_storage_sas_token: ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }}
+          az_storage_account: packageskaitai
+          az_storage_container: test3
+          gpg_priv_key: ${{ secrets.TEST_GPG_PRIV_KEY }}
+          gpg_passphrase: ${{ secrets.TEST_GPG_PASSPHRASE }}
+          packages: all_pkgs/kaitai-struct-compiler_0.7_all.deb
+      - name: Prepare gpg pub key in file
+        run: |
+          echo "${{ secrets.TEST_GPG_PUB_KEY }}" >gpg/repo-pubkey.asc
+      - name: Test install 0.7
+        run: |
+          mkdir -p test
+          sudo ./test-pkg-install-az | tee test/test-0.7.log
+          if grep -q 'kaitai-struct-compiler 0.7' test/test-0.7.log; then
+            echo OK
+          else
+            echo FAIL
+            exit 1
+          fi
+      - name: Run action - add to repo
+        uses: ./ # Uses an action in the root directory
+        with:
+          az_storage_sas_token: ${{ secrets.TEST_AZURE_STORAGE_SAS_TOKEN }}
+          az_storage_account: packageskaitai
+          az_storage_container: test3
+          gpg_priv_key: ${{ secrets.TEST_GPG_PRIV_KEY }}
+          gpg_passphrase: ${{ secrets.TEST_GPG_PASSPHRASE }}
           packages: all_pkgs/kaitai-struct-compiler_0.9_all.deb
       - name: Test install 0.9
         run: |
