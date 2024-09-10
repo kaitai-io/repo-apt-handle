@@ -4,7 +4,6 @@
 apt-get update
 apt-get install -y ca-certificates
 
-: "${REPO_DIR:=repo0}"
 GPG_PUB_KEY_FILE=gpg/repo-pubkey.asc
 
 cat "$GPG_PUB_KEY_FILE" | apt-key add -
