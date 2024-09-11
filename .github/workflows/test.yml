@@ -118,6 +118,7 @@ jobs:
           packages: all_pkgs/kaitai-struct-compiler_0.7_all.deb
       - name: Prepare gpg pub key in file
         run: |
+          mkdir -p gpg
           echo "${{ secrets.TEST_GPG_PUB_KEY }}" >gpg/repo-pubkey.asc
       - name: Test install 0.7
         run: |
