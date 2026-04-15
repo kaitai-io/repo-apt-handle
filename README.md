@@ -21,11 +21,91 @@ Building .deb packages is a complicated topic which is way out of scope for this
 
 #### GPG key
 
-TODO
+The repository must be signed with a GPG key so that apt clients can verify package integrity. You'll need:
+
+* A **private key** (ASCII-armored) — used by this action to sign the repository
+* A **passphrase** for the private key
+* A **public key** — distributed to end users so they can verify the repository
+
+To generate a dedicated GPG signing key:
+
+```sh
+# Choose an identifier for the key and a passphrase
+GPG_KEY_ID="your-repo@example.com"
+GPG_PASSPHRASE="your-strong-passphrase"
+
+# Generate the key (RSA 4096-bit, sign-only, valid for 1 year)
+echo "$GPG_PASSPHRASE" > /tmp/passphrase.txt
+gpg --batch --passphrase-file /tmp/passphrase.txt \
+    --quick-generate-key "$GPG_KEY_ID" rsa4096 sign 1y
+
+# Export the public key (distribute this to your users)
+gpg --export --armor "$GPG_KEY_ID" >repo-pubkey.asc
+
+# Export the private key (store as a GitHub secret)
+echo "$GPG_PASSPHRASE" | gpg --batch --yes --armor \
+    --pinentry-mode loopback --passphrase-fd 0 \
+    --export-secret-keys "$GPG_KEY_ID" > repo-privkey.asc
+
+# Clean up
+rm /tmp/passphrase.txt
+```
+
+Then store the secrets in your GitHub repository:
+
+1. Go to your repo → "Settings" → "Secrets and variables" → "Actions".
+2. Add `MY_GPG_PRIV_KEY` — paste the full contents of `repo-privkey.asc`.
+3. Add `MY_GPG_PASSPHRASE` — paste the passphrase you chose.
+
+Publish `repo-pubkey.asc` somewhere your users can download it (e.g. in the storage account itself or on your project website).
 
 #### Azure subscription and storage account
 
-TODO
+This action hosts the apt repository on [Azure Blob Storage](https://learn.microsoft.com/en-us/azure/storage/blobs/storage-blobs-introduction). You'll need:
+
+* Azure subscription
+* Resource group
+* Storage account
+* Blob container with public read access
+* SAS token with read, write, and list permissions on the container
+
+Assuming you've got Azure subscription set up, Azure CLI installed, and you're logged in:
+
+```sh
+MY_RESOURCE_GROUP=myResourceGroup
+MY_STORAGE_ACCOUNT=mystorageaccount
+MY_CONTAINER=myaptrepo
+MY_LOCATION=westeurope
+
+# Create a resource group
+az group create --name "$MY_RESOURCE_GROUP" --location "$MY_LOCATION"
+
+# Create a storage account
+az storage account create \
+    --name "$MY_STORAGE_ACCOUNT" \
+    --resource-group "$MY_RESOURCE_GROUP" \
+    --location "$MY_LOCATION" \
+    --sku Standard_LRS
+
+# Create a Blob container with public (anonymous) read access, so that apt clients can fetch packages:
+az storage container create \
+    --name "$MY_CONTAINER" \
+    --account-name "$MY_STORAGE_ACCOUNT" \
+    --public-access blob
+
+# Generate a SAS token for CI/CD use. The token needs `read`, `write`, and `list` permissions and should have an appropriate expiry:
+az storage container generate-sas \
+    --name "$MY_CONTAINER" \
+    --account-name "$MY_STORAGE_ACCOUNT" \
+    --permissions rwl \
+    --expiry $(date -u -d "+1 year" +%Y-%m-%dT%H:%MZ) \
+    --output tsv
+```
+
+After you've got the SAS token, store the SAS token as a GitHub secret:
+
+1. Go to your repo → "Settings" → "Secrets and variables" → "Actions".
+2. Add `MY_SAS_TOKEN` — paste the SAS token value.
 
 ### Usage
 
@@ -51,7 +131,30 @@ jobs:
           az_storage_container: your_storage_container
           gpg_priv_key: ${{ secrets.MY_GPG_PRIV_KEY }}
           gpg_passphrase: ${{ secrets.MY_GPG_PASSPHRASE }}
-          packages: path/to/your/new/package.deb
+          packages: path/to/your-package.deb
+```
+
+### Consuming the repository
+
+To be able to install packages the repository, users will need to add it to their apt keyring first:
+
+```sh
+curl -fsSL https://repo.example.com/repo-pubkey.asc | sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/your-repo.gpg
+```
+
+or apt-key (deprecated but still widely used):
+
+```sh
+curl -fsSL https://repo.example.com/repo-pubkey.asc | sudo apt-key add -
+```
+
+Once configured, users can add your repository to their apt sources:
+
+```sh
+echo "deb [arch=all] https://<account>.blob.core.windows.net/<container> stable main" \
+    | sudo tee /etc/apt/sources.list.d/your-repo.list
+sudo apt-get update
+sudo apt-get install your-package
 ```
 
 ## Caveats and limitations
@@ -70,7 +173,7 @@ Internally, this action uses:
 
 See [LICENSE](LICENSE) file.
 
-Copyright (C) 2024 Kaitai Project.
+Copyright (C) 2024-2026 Kaitai Project.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
