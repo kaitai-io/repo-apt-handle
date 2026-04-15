@@ -16,7 +16,7 @@ echo test >"$GPG_KEY_PASSPHRASE_FILE"
 gpg \
 	--batch \
 	--passphrase-file "$GPG_KEY_PASSPHRASE_FILE" \
-	--quick-generate-key "$GPG_KEY_ID" rsa4096 sign 1y
+	--quick-generate-key "$GPG_KEY_ID" rsa4096 sign 10y
 
 # Export public key
 gpg \

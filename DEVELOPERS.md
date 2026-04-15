@@ -42,3 +42,26 @@ GHA tests use an Azure Storage SAS token stored as a GitHub Actions secret. The 
 * Update the GitHub secret:
   * Go to https://github.com/kaitai-io/repo-apt-handle/settings/secrets/actions
   * Update `TEST_AZURE_STORAGE_SAS_TOKEN` with the new value.
+
+## Rotating the test GPG key
+
+The `test_as_action_keys_in_inputs` job uses a GPG key passed via GitHub secrets. The key is generated with a 10-year validity, so it needs to be rotated. When it expires, the job will fail with:
+
+```
+gpg: Warning: not using 'test-key@kaitai.io' as default key: Key expired
+gpg: signing failed: No secret key
+```
+
+* Generate a new GPG key using the existing script (requires Docker or Podman):
+
+    ```sh
+    ./docker-test-generate-gpg
+    ```
+
+    This produces three files in `gpg/`.
+
+* Update the GitHub secrets:
+  * Go to https://github.com/kaitai-io/repo-apt-handle/settings/secrets/actions
+  * Update `TEST_GPG_PRIV_KEY` — paste the full contents of `gpg/repo-privkey.asc`.
+  * Update `TEST_GPG_PUB_KEY` — paste the full contents of `gpg/repo-pubkey.asc`.
+  * Update `TEST_GPG_PASSPHRASE` — paste the contents of `gpg/key-password`.
